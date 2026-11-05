@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using session_1.Data;
@@ -12,17 +13,32 @@ namespace session_1.Controllers
     public class PatientsController : ControllerBase
     {
         private readonly ApplicationDbContext _dbContext;
+        private readonly IMapper _mapper;
 
-        public PatientsController(ApplicationDbContext dbContext)
+        public PatientsController(ApplicationDbContext dbContext,IMapper mapper)
         {
             _dbContext = dbContext;
+            _mapper = mapper;
         }
 
         [HttpGet]
         public async Task<IActionResult> GettAllPatients()
         {
             var patients=await _dbContext.Patients.ToListAsync();
-            return Ok(patients);
+            //var PatientsResponse = new List<GetPatientResponse>();
+            //foreach (var patient in patients) 
+            //{
+            //    var response = new GetPatientResponse
+            //    {
+            //        PatientID = patient.Id,
+            //        PatientName = patient.Name,
+            //        PatientDateOfBirth = patient.DateOfBirth,
+
+            //    };
+            //    PatientsResponse.Add(response);
+            //}
+            var PatientsResponse = _mapper.Map<List<Patient>?, List<GetPatientResponse>>(patients);
+            return Ok(PatientsResponse);
         }
 
         [HttpGet("GetById/{id:int}")]
@@ -31,7 +47,14 @@ namespace session_1.Controllers
             var patient=await _dbContext.Patients.FirstOrDefaultAsync(p=>p.Id==id);
             if(patient==null)
                 return NotFound($"Patient with id : {id} not found!");
-            return Ok(patient);
+            //var response = new GetPatientResponse
+            //{
+            //    PatientID = patient.Id,
+            //    PatientName = patient.Name,
+            //    PatientDateOfBirth = patient.DateOfBirth,
+            //};
+            var response = _mapper.Map<Patient, GetPatientResponse>(patient);
+            return Ok(response);
         }
 
         [HttpPost]
